@@ -4,13 +4,13 @@ import { IWebViewMessage } from '../@types/messages';
 import { IVSCodeAPI } from '../@types/system';
 import { useParams } from 'react-router-dom';
 import { ITranslateCodeunit } from '../@types/translate';
-import { TranslationTable } from '../components/translation-table';
-import { ALObjectHeader } from '../components/al-object-header';
 import '../styles/translation.scss';
+import { ITranslationSection } from '../@types/components';
+import { TranslationView } from '../components/translation.view';
 
 export const TranslateCodeunitView: React.FC<{ vscode: IVSCodeAPI }> = ({ vscode }) => {
     const [alObject, setAlObject] = React.useState<IALObject>();
-    const [translationObject, setTranslationObject] = React.useState<ITranslateCodeunit>();
+    const [translationSections, setTranslationSections] = React.useState<ITranslationSection[]>([]);
     const { id } = useParams<'id'>();
 
     React.useEffect(() => {
@@ -18,7 +18,8 @@ export const TranslateCodeunitView: React.FC<{ vscode: IVSCodeAPI }> = ({ vscode
             if (ev.data.command === 'al_object_id') {
                 setAlObject(ev.data.payload);
             } else if (ev.data.command === 'al_object_translation') {
-                setTranslationObject(ev.data.payload);
+                const translationObject : ITranslateCodeunit = ev.data.payload;
+                setTranslationSections([{name: 'Labels', transUnits: translationObject.labels}]);
             }
         });
         return () => {
@@ -36,18 +37,12 @@ export const TranslateCodeunitView: React.FC<{ vscode: IVSCodeAPI }> = ({ vscode
         }
     }, [alObject]);
 
-    return (
-        <div className="translate table">
-            {(alObject) ? <ALObjectHeader alObject={alObject} /> : null}
-            {(translationObject) ? <CodeunitTranslations translations={translationObject} vscode={vscode} /> : null}
-        </div>
-    );
-};
 
-const CodeunitTranslations: React.FC<{ translations: ITranslateCodeunit, vscode: IVSCodeAPI }> = ({ translations, vscode }) => {
+    if (!alObject) {
+        return null;
+    }
+
     return (
-        <div className="translations">
-            {(translations.labels.length > 0) ? <TranslationTable name='Labels' translations={translations.labels} vscode={vscode} textarea /> : null}
-        </div>
+        <TranslationView vscode={vscode} alObject={alObject} sections={translationSections} />
     );
 };

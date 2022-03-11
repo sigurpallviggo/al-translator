@@ -5,13 +5,13 @@ import { IWebViewMessage } from '../@types/messages';
 import { IVSCodeAPI } from '../@types/system';
 import { useParams } from 'react-router-dom';
 import { ITranslateTableExtension } from '../@types/translate';
-import { TranslationTable } from '../components/translation-table';
-import { ALObjectHeader } from '../components/al-object-header';
 import '../styles/translation.scss';
+import { ITranslationSection } from '../@types/components';
+import { TranslationView } from '../components/translation.view';
 
 export const TranslateTableExtensionView: React.FC<{ vscode: IVSCodeAPI }> = ({ vscode }) => {
     const [alObject, setAlObject] = React.useState<IALObject>();
-    const [translationObject, setTranslationObject] = React.useState<ITranslateTableExtension>();
+    const [translationSections, setTranslationSections] = React.useState<ITranslationSection[]>([]);
     const { id } = useParams<'id'>();
     
     React.useEffect(() => {
@@ -19,7 +19,15 @@ export const TranslateTableExtensionView: React.FC<{ vscode: IVSCodeAPI }> = ({ 
             if (ev.data.command === 'al_object_id') {
                 setAlObject(ev.data.payload);
             } else if (ev.data.command === 'al_object_translation') {
-                setTranslationObject(ev.data.payload);
+                const translationObject : ITranslateTableExtension = ev.data.payload;
+                const sections : ITranslationSection[] = [];
+                if (translationObject.fields.length > 0) {
+                    sections.push({name: 'Fields', transUnits: translationObject.fields});
+                }
+                if (translationObject.labels.length > 0) {
+                    sections.push({name: 'Labels', transUnits: translationObject.labels});
+                }
+                setTranslationSections(sections);
             }
         });
         return () => {
@@ -37,25 +45,11 @@ export const TranslateTableExtensionView: React.FC<{ vscode: IVSCodeAPI }> = ({ 
         }
     }, [alObject]);
 
-    React.useEffect(() => {
-        if (translationObject) {
-            console.log(translationObject);
-        }
-    }, [translationObject]);
+    if (!alObject) {
+        return null;
+    }
 
     return (
-        <div className="translate table">
-            {(alObject) ? <ALObjectHeader alObject={alObject} /> : null}
-            {(translationObject)? <TableExtensionTranslations translations={translationObject} vscode={vscode} /> : null}
-        </div>
-    );
-};
-
-const TableExtensionTranslations: React.FC<{ translations: ITranslateTableExtension, vscode : IVSCodeAPI }> = ({ translations, vscode }) => {
-    return (
-        <div className="translations">
-            {(translations.fields.length > 0)? <TranslationTable name='Fields' translations={translations.fields} vscode={vscode} /> : null}
-            {(translations.labels.length > 0)? <TranslationTable name='Labels' translations={translations.labels} vscode={vscode} textarea /> : null}
-        </div>
+        <TranslationView vscode={vscode} alObject={alObject} sections={translationSections} />
     );
 };

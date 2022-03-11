@@ -83,3 +83,9 @@ export interface ITranslatePageActionPromotedCategories {
     sources: string[];
     targets?: string [];
 }
+
+export interface ITranslateEnum {
+    id: number;
+    name : string;
+    values: ITranslateTableField[];
+}

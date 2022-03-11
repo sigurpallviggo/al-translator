@@ -6,4 +6,4 @@ export interface IALObject {
     extends?: string;
 }
 
-export type IALObjectType = 'codeunit'|'table'|'tableextension'|'page'|'pageextension'|'report'|'xmlport';
+export type IALObjectType = 'codeunit'|'table'|'tableextension'|'page'|'pageextension'|'report'|'xmlport'|'enum';

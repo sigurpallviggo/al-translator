@@ -73,6 +73,7 @@ export const MainView: React.FC<{ vscode: IVSCodeAPI }> = (vscode) => {
                         <li className={(selectedTypeFilter === 'report') ? 'selected' : null} onClick={() => setTypeFilter('report')} >Reports</li>
                         <li className={(selectedTypeFilter === 'tableextension') ? 'selected' : null} onClick={() => setTypeFilter('tableextension')} >Table Extensions</li>
                         <li className={(selectedTypeFilter === 'pageextension') ? 'selected' : null} onClick={() => setTypeFilter('pageextension')} >Page Extensions</li>
+                        <li className={(selectedTypeFilter === 'enum') ? 'selected' : null} onClick={() => setTypeFilter('enum')} >Enums</li>
                     </ul>
                 </div>
                 <div className="search-input">
@@ -83,7 +84,7 @@ export const MainView: React.FC<{ vscode: IVSCodeAPI }> = (vscode) => {
                 <table>
                         <ObjectListHeader showExtendsField={showExtendsField} showObjectType={showObjectType} />
                     <tbody>
-                        {(filteredAlObjects).map(ob => <ObjectListItem key={ob.type + ob.id.toString()} showExtendsField={showExtendsField} showObjectType={showObjectType} alObject={ob} />)}
+                        {filteredAlObjects.slice().map(ob => <ObjectListItem key={ob.type + ob.id.toString()} showExtendsField={showExtendsField} showObjectType={showObjectType} alObject={ob} />)}
                     </tbody>
                 </table>
             </div>

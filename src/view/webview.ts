@@ -4,7 +4,7 @@ import { IWebViewMessage } from './app/@types/messages';
 import { parseWorkspace } from '../al/object-parser';
 import { XLIFFDocument } from './app/@types/xliff-file';
 import { IALObject, IALObjectType } from './app/@types/al';
-import { getCodeunitTranslations, getPageExtensionTranslations, getPageTranslations, getPercentageTranslated, getTableExtensionTranslations, getTableTranslations } from '../al/xliff-file';
+import { getCodeunitTranslations, getEnumTranslations, getPageExtensionTranslations, getPageTranslations, getPercentageTranslated, getTableExtensionTranslations, getTableTranslations } from '../al/xliff-file';
 import { saveTranslation } from '../al/translate';
 
 export const createWebViewPanel = (context: vscode.ExtensionContext, xliffFile: { fsPath: string, content: XLIFFDocument }) => {
@@ -51,6 +51,9 @@ export const createWebViewPanel = (context: vscode.ExtensionContext, xliffFile: 
                             const tableExtensionTranslations = getTableExtensionTranslations(xliffFile.content, message.payload.name);
                             panel.webview.postMessage({ command: message.command, payload: tableExtensionTranslations });
                             break;
+                        case 'enum':
+                            const enumTranslations = getEnumTranslations(xliffFile.content, message.payload.name);
+                            panel.webview.postMessage({command: message.command, payload: enumTranslations});
                     }
                 }
                 break;

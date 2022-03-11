@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as xmlParser from 'xml2js';
 import { TransUnit, TransUnitElement, XLIFFDocument } from '../view/app/@types/xliff-file';
-import { ITranslateCodeunit, ITranslateLabel, ITranslatePage, ITranslatePageActionPromotedCategories, ITranslatePageExtension, ITranslateTable, ITranslateTableExtension, ITranslateTableField } from '../view/app/@types/translate';
+import { ITranslateCodeunit, ITranslateEnum, ITranslateLabel, ITranslatePage, ITranslatePageActionPromotedCategories, ITranslatePageExtension, ITranslateTable, ITranslateTableExtension, ITranslateTableField } from '../view/app/@types/translate';
 import { IALObjectType } from '../view/app/@types/al';
 
 export const getPercentageTranslated = (type: IALObjectType, name: string, xliffDocument: XLIFFDocument): number => {
@@ -81,6 +81,15 @@ export const getTableExtensionTranslations = (xliff:  XLIFFDocument, tableExtens
     return getTranslateTableExtensionUnit(tableExtensionName, tableExtensionId, transUnits);
 };
 
+export const getEnumTranslations = (xliff : XLIFFDocument, enumName : string) => {
+    const transUnits = xliff.xliff.file[0].body[0].group[0]['trans-unit'];
+    const enumId = getObjectXliffId('enum', transUnits, enumName);
+    if (!enumId) {
+        return;
+    }
+    return getTranslateEnumUnit(enumName, enumId, transUnits);
+};
+
 export const getObjectXliffId = (type: IALObjectType, transUnits: TransUnitElement[], objectName: string): number | null => {
     const pattern = new RegExp(`^${type} ${objectName}(?= -)`, 'i');
     const idPattern = new RegExp(`(?<=${type}\\s)\\d+`, 'i');
@@ -132,6 +141,12 @@ const getTranslateTableExtensionUnit = (tableExtensionName : string, tableExtens
     const pattern = new RegExp(`TableExtension ${tableExtensionId}`);
     const tableExtensionTransUnits = transUnits.filter(x => pattern.exec(x.$.id));
     return parseTableExtensionTransUnits(tableExtensionName, tableExtensionId, tableExtensionTransUnits);
+};
+
+const getTranslateEnumUnit = (enumName : string, enumId : number, transUnits : TransUnitElement[]) => {
+    const pattern = new RegExp(`Enum ${enumId}`);
+    const enumTransUnits = transUnits.filter(x => pattern.exec(x.$.id));
+    return parseEnumTransUnits(enumName, enumId, enumTransUnits);
 };
 
 const parseTableTransUnits = (tableName: string, tableId: number, tableTransUnits: TransUnitElement[]): ITranslateTable => {
@@ -386,6 +401,26 @@ const parseCodeunitTransUnits = (codeunitName: string, codeunitId: number, codeu
     };
 };
 
+const parseEnumTransUnits = (enumName : string, enumId : number, enumTransUnits : TransUnitElement[]): ITranslateEnum => {
+    const name = enumName;
+    const id = enumId;
+    const enumValues : ITranslateTableField[] = [];
+    for (var i = 0; i < enumTransUnits.length; i++) {
+        const transUnit = enumTransUnits[i];
+        if (isEnumValue(enumId, transUnit)) {
+            const enumValueInfo = getEnumValueInfo(transUnit);
+            if (enumValueInfo) {
+                enumValues.push({xliffId: transUnit.$.id, id : enumValueInfo.id, name: enumValueInfo.name, source: transUnit.source[0], target: getTargetString(transUnit)});
+            }
+        }
+    }
+    return {
+        name,
+        id,
+        values: enumValues
+    }
+};
+
 const getTargetString = (transUnit: TransUnitElement): string => {
     if (!transUnit.target) {
         return '';
@@ -469,6 +504,14 @@ const isPromotedActionCategories = (id: number, transUnit: TransUnitElement): bo
     return false;
 };
 
+const isEnumValue = (id : number, transUnit : TransUnitElement) : boolean => {
+    const pattern = new RegExp(`Enum ${id} - EnumValue (\\d+) - Property 2879900210`);
+    if (pattern.exec(transUnit.$.id)) {
+        return true;
+    }
+    return false;
+};
+
 const getTableFieldInfo = (transUnit: TransUnitElement): { id: number, name: string } | null => {
     const idPattern = /(?<=Field )\d+/g;
     const namePattern = /(?<=Field ).*(?= - Property Caption)/g;
@@ -526,6 +569,24 @@ const getPageControlInfo = (transUnit: TransUnitElement): { id: number, name: st
 const getPageActionInfo = (transUnit: TransUnitElement): { id: number, name: string } | null => {
     const idPattern = /(?<=Page (\d+) - Action )\d+(?= - Property 2879900210)/g;
     const namePattern = /(?<=- Action ).*(?= - Property Caption)/g;
+    const generatorNote = transUnit.note.find(x => x.$.from === 'Xliff Generator');
+    if (!generatorNote || !generatorNote._) {
+        return null;
+    };
+    const idMatches = idPattern.exec(transUnit.$.id);
+    const nameMatches = namePattern.exec(generatorNote._);
+    if (!idMatches || !nameMatches) {
+        return null;
+    }
+    return {
+        id: parseInt(idMatches[0]),
+        name: nameMatches[0]
+    };
+};
+
+const getEnumValueInfo = (transUnit : TransUnitElement): {id: number, name : string} | null => {
+    const idPattern = /(?<=Enum \d+ - EnumValue )\d+(?= - Property 2879900210)/g;
+    const namePattern = /(?<=- EnumValue ).*(?= - Property Caption)/g;
     const generatorNote = transUnit.note.find(x => x.$.from === 'Xliff Generator');
     if (!generatorNote || !generatorNote._) {
         return null;

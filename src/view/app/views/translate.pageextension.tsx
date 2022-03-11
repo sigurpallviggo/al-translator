@@ -5,21 +5,36 @@ import { IWebViewMessage } from '../@types/messages';
 import { IVSCodeAPI } from '../@types/system';
 import { useParams } from 'react-router-dom';
 import { ITranslatePageExtension } from '../@types/translate';
-import { TranslationTable } from '../components/translation-table';
-import { ALObjectHeader } from '../components/al-object-header';
 import '../styles/translation.scss';
+import { ITranslationSection } from '../@types/components';
+import { TranslationView } from '../components/translation.view';
 
 export const TranslatePageExtensionView: React.FC<{ vscode: IVSCodeAPI }> = ({ vscode }) => {
     const [alObject, setAlObject] = React.useState<IALObject>();
-    const [translationObject, setTranslationObject] = React.useState<ITranslatePageExtension>();
+    const [translationSections, setTranslationSections] = React.useState<ITranslationSection[]>([]);
     const { id } = useParams<'id'>();
+
 
     React.useEffect(() => {
         window.addEventListener('message', (ev: MessageEvent<IWebViewMessage>) => {
             if (ev.data.command === 'al_object_id') {
                 setAlObject(ev.data.payload);
             } else if (ev.data.command === 'al_object_translation') {
-                setTranslationObject(ev.data.payload);
+                const translationObject: ITranslatePageExtension = ev.data.payload;
+                const sections: ITranslationSection[] = [];
+                if (translationObject.controls.length > 0) {
+                    sections.push({ name: 'Controls', transUnits: translationObject.controls });
+                }
+                if (translationObject.actions.length > 0) {
+                    sections.push({ name: 'Actions', transUnits: translationObject.actions });
+                }
+                if (translationObject.promotedActionCategories) {
+                    sections.push({ name: 'Promoted Action Categories', transUnits: [] });
+                }
+                if (translationObject.labels.length > 0) {
+                    sections.push({ name: 'Labels', transUnits: translationObject.labels });
+                }
+                setTranslationSections(sections);
             }
         });
         return () => {
@@ -37,27 +52,11 @@ export const TranslatePageExtensionView: React.FC<{ vscode: IVSCodeAPI }> = ({ v
         }
     }, [alObject]);
 
-    React.useEffect(() => {
-        if (translationObject) {
-            console.log(translationObject);
-        }
-    }, [translationObject]);
+    if (!alObject) {
+        return null;
+    }
 
     return (
-        <div className="translate table">
-            {(alObject) ? <ALObjectHeader alObject={alObject} /> : null}
-            {(translationObject)? <PageExtensionTranslations translations={translationObject} vscode={vscode} /> : null}
-        </div>
-    );
-};
-
-const PageExtensionTranslations: React.FC<{ translations: ITranslatePageExtension, vscode : IVSCodeAPI }> = ({ translations, vscode }) => {
-    return (
-        <div className="translations">
-            {(translations.controls.length > 0)? <TranslationTable name='Controls' translations={translations.controls} vscode={vscode} /> : null}
-            {(translations.actions.length > 0)? <TranslationTable name='Actions'  translations={translations.actions} vscode={vscode} /> : null}
-            {(translations.promotedActionCategories)? <TranslationTable name='Promoted Action Categories'  translations={[]} vscode={vscode} /> : null}
-            {(translations.labels.length > 0)? <TranslationTable name='Labels' translations={translations.labels} vscode={vscode} textarea /> : null}
-        </div>
+        <TranslationView vscode={vscode} alObject={alObject} sections={translationSections} />
     );
 };
