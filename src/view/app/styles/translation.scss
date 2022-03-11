@@ -1,0 +1,50 @@
+.translation-table {
+    max-width: 1290px;
+    margin: auto;
+    h3 {
+        border-bottom: 1px solid whitesmoke;
+        margin: 0;
+        padding-top: 20px;
+        padding-bottom: 10px;
+    }
+    table {
+        padding: 10px;
+        max-width: 1200px;
+        min-width: 720px;
+        width: 100%;
+        margin: auto;
+        border-collapse: collapse;
+        th {
+            text-align: left;
+        }
+        td {
+            text-align: left;
+            textarea,
+            input {
+                width: 100%;
+            }
+            textarea {
+                font: inherit;
+                height: 80px;
+                resize: none;
+            }
+        }
+        th.name,
+        td.name {
+            width: 20%;
+        }
+        th.source,
+        td.source {
+            width: 40%;
+        }
+        th.target,
+        td.target {
+            width: 40%;
+        }
+        thead {
+            tr {
+                line-height: 3;
+            }
+        }
+    }
+}

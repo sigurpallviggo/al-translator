@@ -1,0 +1,68 @@
+.view.main {
+    .al-object-menu {
+        ul {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            li.selected {
+                font-weight: bold;
+            }
+            li {
+                display: inline-block;
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+        }
+    }
+    .object-list {
+        padding: 10px;
+        table {
+            width: 100%;
+            max-width: 600px;
+            margin: auto;
+            border-collapse: collapse;
+            thead {
+                tr {
+                    th {
+                        text-align: left;
+                    }
+                    th.id {
+                    }
+                    th.name {
+                    }
+                    th.translated {
+                        text-align: right;
+                    }
+                }
+            }
+            tbody {
+                tr {
+                    border-bottom: 0.5px solid gray;
+                    line-height: 2;
+                    td {
+                        a {
+                            color: inherit;
+                            text-decoration: none;
+                        }
+                    }
+                    td.id {
+                    }
+                    td.name {
+                    }
+                    td.translated {
+                        text-align: right;
+                    }
+                    td.warning {
+                        color: orange;
+                    }
+                    td.critical {
+                        color: firebrick;
+                    }
+                }
+                tr:last-of-type {
+                    border-bottom: none;
+                }
+            }
+        }
+    }
+}
