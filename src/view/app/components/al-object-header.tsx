@@ -8,18 +8,23 @@ import '../styles/al-object-header.scss';
 export const ALObjectHeader: React.FC<{ alObject: IALObject }> = ({ alObject }) => {
 
     return (
-        
+
         <div className="al-object-header">
             <Link to="/">
                 <div className="back-button">
                     <BackButton />
                 </div>
             </Link>
-            <div className="id">
-                <h3>{alObject.id}</h3>
-            </div>
-            <div className="name">
-                <h2>{alObject.name}</h2>
+            <div className="al-object">
+                <div className="type">
+                    <h4>{alObject.type.toLocaleUpperCase()}</h4>
+                </div>
+                <div className="id">
+                    <h3>{alObject.id}</h3>
+                </div>
+                <div className="name">
+                    <h2>{alObject.name}</h2>
+                </div>
             </div>
         </div>
     );

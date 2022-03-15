@@ -3,6 +3,8 @@ export interface ITranslation {
     name : string;
     source: string;
     target?: string;
+    isPromotedActionCategories? : boolean;
+    promotedActionCategoryIndex?: number;
 }
 
 export interface ITranslationObject {

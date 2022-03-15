@@ -35,7 +35,14 @@ const TranslationTableRow: React.FC<{ translation: ITranslation, vscode: IVSCode
 
     const onInputBlur = React.useCallback(() => {
         if (newTarget !== translation.target) {
-            vscode.postMessage({ command: 'translate_unit', payload: { xliffId: translation.xliffId, target: newTarget } });
+            vscode.postMessage({
+                command: 'translate_unit', payload: {
+                    xliffId: translation.xliffId, 
+                    target: newTarget,
+                    isPromotedActionCategories: translation.isPromotedActionCategories, 
+                    promotedActionCategoryIndex: translation.promotedActionCategoryIndex
+                }
+            });
         }
     }, [newTarget, vscode]);
 
@@ -44,7 +51,7 @@ const TranslationTableRow: React.FC<{ translation: ITranslation, vscode: IVSCode
             <td className='name'>{translation.name}</td>
             <td className='source'>{translation.source}</td>
             <td className='target'>
-                {(textarea) ? 
+                {(textarea) ?
                     <textarea value={newTarget} onBlur={(ev) => onInputBlur()} onChange={(ev) => setNewTarget(ev.target.value)} name={translation.source} id={translation.xliffId}> </textarea> :
                     <input type="text" value={newTarget} onBlur={(ev) => onInputBlur()} onChange={(ev) => setNewTarget(ev.target.value)} name={translation.source} id={translation.xliffId} />}
             </td>

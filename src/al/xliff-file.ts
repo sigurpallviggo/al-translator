@@ -2,8 +2,9 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as xmlParser from 'xml2js';
 import { TransUnit, TransUnitElement, XLIFFDocument } from '../view/app/@types/xliff-file';
-import { ITranslateCodeunit, ITranslateEnum, ITranslateLabel, ITranslatePage, ITranslatePageActionPromotedCategories, ITranslatePageExtension, ITranslateTable, ITranslateTableExtension, ITranslateTableField } from '../view/app/@types/translate';
+import { ITranslateCodeunit, ITranslateEnum, ITranslateLabel, ITranslatePage, ITranslatePageActionPromotedCategories, ITranslatePageExtension, ITranslateTable, ITranslateTableExtension, ITranslateTableField, ITranslation } from '../view/app/@types/translate';
 import { IALObjectType } from '../view/app/@types/al';
+import { ITranslationSection } from '../view/app/@types/components';
 
 export const getPercentageTranslated = (type: IALObjectType, name: string, xliffDocument: XLIFFDocument): number => {
     const transUnits = xliffDocument.xliff.file[0].body[0].group[0]['trans-unit'];
@@ -36,58 +37,133 @@ export const findXliffFileFromLanguageAndExtensionName = async (extensionName: s
     throw new Error(`Translation file for extension: ${extensionName} and language: ${language} was not found`);
 };
 
-export const getTableTranslations = (xliff: XLIFFDocument, tableName: string) => {
+export const getTableTranslations = (xliff: XLIFFDocument, tableName: string) : ITranslationSection[] => {
     const transUnits = xliff.xliff.file[0].body[0].group[0]['trans-unit'];
     const tableXId = getObjectXliffId('table', transUnits, tableName);
     if (!tableXId) {
-        return;
+        return[];
     }
-    return getTranslateTableUnit(tableName, tableXId, transUnits);
+    const tableTransUnit = getTranslateTableUnit(tableName, tableXId, transUnits);
+    const sections: ITranslationSection[] = [];
+    if (tableTransUnit.xliffId) {
+        sections.push({ name: 'Table Caption', transUnits: [{ ...tableTransUnit }] });
+    }
+    if (tableTransUnit.fields.length > 0) {
+        sections.push({ name: 'Fields', transUnits: tableTransUnit.fields });
+    }
+    if (tableTransUnit.labels.length > 0) {
+        sections.push({ name: 'Labels', transUnits: tableTransUnit.fields });
+    }
+    return sections;
 };
 
-export const getPageTranslations = (xliff: XLIFFDocument, pageName: string) => {
+export const getPageTranslations = (xliff: XLIFFDocument, pageName: string) : ITranslationSection[] => {
     const transUnits = xliff.xliff.file[0].body[0].group[0]['trans-unit'];
     const pageId = getObjectXliffId('page', transUnits, pageName);
     if (!pageId) {
-        return;
+        return[];
     }
-    return getTranslatePageUnit(pageName, pageId, transUnits);
+    const translationObject = getTranslatePageUnit(pageName, pageId, transUnits);
+    const sections: ITranslationSection[] = [];
+    if (translationObject.xliffId) {
+        sections.push({ name: 'Page Caption', transUnits: [{ ...translationObject }] });
+    }
+    if (translationObject.controls.length > 0) {
+        sections.push({ name: 'controls', transUnits: translationObject.controls });
+    }
+    if (translationObject.actions.length > 0) {
+        sections.push({ name: 'Actions', transUnits: translationObject.actions });
+    }
+    if (translationObject.promotedActionCategories) {
+        const promotedCategories = translationObject.promotedActionCategories;
+        const transUnits : ITranslation[] = [];
+
+        for (var i = 0; i < promotedCategories.sources.length; i++) {
+            transUnits.push({xliffId: promotedCategories.xliffId, name: 'Promoted Action Category', source: promotedCategories.sources[i], target: (promotedCategories.targets)? promotedCategories.targets[i] : undefined, isPromotedActionCategories: true, promotedActionCategoryIndex: i});
+        }
+        sections.push({ name: 'Promoted Action Categories', transUnits});
+    }
+    if (translationObject.labels.length > 0) {
+        sections.push({ name: 'Labels', transUnits: translationObject.labels });
+    }
+    return sections;
 };
 
-export const getCodeunitTranslations = (xliff: XLIFFDocument, codeunitName: string) => {
+export const getCodeunitTranslations = (xliff: XLIFFDocument, codeunitName: string) : ITranslationSection[] => {
     const transUnits = xliff.xliff.file[0].body[0].group[0]['trans-unit'];
     const codeunitId = getObjectXliffId('codeunit', transUnits, codeunitName);
     if (!codeunitId) {
-        return;
+        return[];
     }
-    return getTranslateCodeunitUnit(codeunitName, codeunitId, transUnits);
+    const translationObject = getTranslateCodeunitUnit(codeunitName, codeunitId, transUnits);
+    const sections: ITranslationSection[] = [];
+    if (translationObject.labels.length > 0) {
+        sections.push({name: 'Labels', transUnits: translationObject.labels});    
+    }
+    return sections;
 };
 
-export const getPageExtensionTranslations = (xliff : XLIFFDocument, pageExtensionName : string) => {
+export const getPageExtensionTranslations = (xliff: XLIFFDocument, pageExtensionName: string) : ITranslationSection[] => {
     const transUnits = xliff.xliff.file[0].body[0].group[0]['trans-unit'];
     const pageExtensionId = getObjectXliffId('pageextension', transUnits, pageExtensionName);
-    if(!pageExtensionId) {
-        return;
+    if (!pageExtensionId) {
+        return[];
     }
-    return getTranslatePageExtensionUnit(pageExtensionName, pageExtensionId, transUnits);
+    const translationObject = getTranslatePageExtensionUnit(pageExtensionName, pageExtensionId, transUnits);
+    const sections: ITranslationSection[] = [];
+    if (translationObject.controls.length > 0) {
+        sections.push({ name: 'Controls', transUnits: translationObject.controls });
+    }
+    if (translationObject.actions.length > 0) {
+        sections.push({ name: 'Actions', transUnits: translationObject.actions });
+    }
+    if (translationObject.promotedActionCategories) {
+        sections.push({ name: 'Promoted Action Categories', transUnits: [] });
+    }
+    if (translationObject.labels.length > 0) {
+        sections.push({ name: 'Labels', transUnits: translationObject.labels });
+    }
+    if (translationObject.promotedActionCategories) {
+        const promotedCategories = translationObject.promotedActionCategories;
+        const transUnits : ITranslation[] = [];
+
+        for (var i = 0; i < promotedCategories.sources.length; i++) {
+            transUnits.push({xliffId: promotedCategories.xliffId, name: 'Promoted Action Category', source: promotedCategories.sources[i], target: (promotedCategories.targets)? promotedCategories.targets[i] : undefined, isPromotedActionCategories: true, promotedActionCategoryIndex: i});
+        }
+        sections.push({ name: 'Promoted Action Categories', transUnits});
+    }
+    return sections;
 };
 
-export const getTableExtensionTranslations = (xliff:  XLIFFDocument, tableExtensionName : string) => {
+export const getTableExtensionTranslations = (xliff: XLIFFDocument, tableExtensionName: string) : ITranslationSection[] => {
     const transUnits = xliff.xliff.file[0].body[0].group[0]['trans-unit'];
     const tableExtensionId = getObjectXliffId('tableextension', transUnits, tableExtensionName);
     if (!tableExtensionId) {
-        return;
+        return[];
     }
-    return getTranslateTableExtensionUnit(tableExtensionName, tableExtensionId, transUnits);
+    const translationObject = getTranslateTableExtensionUnit(tableExtensionName, tableExtensionId, transUnits);
+    const sections : ITranslationSection[] = [];
+    if (translationObject.fields.length > 0) {
+        sections.push({name: 'Fields', transUnits: translationObject.fields});
+    }
+    if (translationObject.labels.length > 0) {
+        sections.push({name: 'Labels', transUnits: translationObject.labels});
+    }
+    return sections;
 };
 
-export const getEnumTranslations = (xliff : XLIFFDocument, enumName : string) => {
+export const getEnumTranslations = (xliff: XLIFFDocument, enumName: string) => {
     const transUnits = xliff.xliff.file[0].body[0].group[0]['trans-unit'];
     const enumId = getObjectXliffId('enum', transUnits, enumName);
     if (!enumId) {
-        return;
+        return[];
     }
-    return getTranslateEnumUnit(enumName, enumId, transUnits);
+    const translationObject = getTranslateEnumUnit(enumName, enumId, transUnits);
+    const sections: ITranslationSection[] = [];
+    if (translationObject.values.length > 0) {
+        sections.push({ name: 'Values', transUnits: translationObject.values });
+    }
+    return sections;
 };
 
 export const getObjectXliffId = (type: IALObjectType, transUnits: TransUnitElement[], objectName: string): number | null => {
@@ -131,19 +207,19 @@ const getTranslateCodeunitUnit = (codeunitName: string, codeunitId: number, tran
     return parseCodeunitTransUnits(codeunitName, codeunitId, codeunitTransUnits);
 };
 
-const getTranslatePageExtensionUnit = (pageExtensionName : string, pageExtensionId : number, transUnits : TransUnitElement[]) => {
+const getTranslatePageExtensionUnit = (pageExtensionName: string, pageExtensionId: number, transUnits: TransUnitElement[]) => {
     const pattern = new RegExp(`PageExtension ${pageExtensionId}`);
     const pageExtensionTransUnits = transUnits.filter(x => pattern.exec(x.$.id));
     return parsePageExtensionTransUnits(pageExtensionName, pageExtensionId, pageExtensionTransUnits);
 };
 
-const getTranslateTableExtensionUnit = (tableExtensionName : string, tableExtensionId : number, transUnits : TransUnitElement[]) => {
+const getTranslateTableExtensionUnit = (tableExtensionName: string, tableExtensionId: number, transUnits: TransUnitElement[]) => {
     const pattern = new RegExp(`TableExtension ${tableExtensionId}`);
     const tableExtensionTransUnits = transUnits.filter(x => pattern.exec(x.$.id));
     return parseTableExtensionTransUnits(tableExtensionName, tableExtensionId, tableExtensionTransUnits);
 };
 
-const getTranslateEnumUnit = (enumName : string, enumId : number, transUnits : TransUnitElement[]) => {
+const getTranslateEnumUnit = (enumName: string, enumId: number, transUnits: TransUnitElement[]) => {
     const pattern = new RegExp(`Enum ${enumId}`);
     const enumTransUnits = transUnits.filter(x => pattern.exec(x.$.id));
     return parseEnumTransUnits(enumName, enumId, enumTransUnits);
@@ -401,16 +477,16 @@ const parseCodeunitTransUnits = (codeunitName: string, codeunitId: number, codeu
     };
 };
 
-const parseEnumTransUnits = (enumName : string, enumId : number, enumTransUnits : TransUnitElement[]): ITranslateEnum => {
+const parseEnumTransUnits = (enumName: string, enumId: number, enumTransUnits: TransUnitElement[]): ITranslateEnum => {
     const name = enumName;
     const id = enumId;
-    const enumValues : ITranslateTableField[] = [];
+    const enumValues: ITranslateTableField[] = [];
     for (var i = 0; i < enumTransUnits.length; i++) {
         const transUnit = enumTransUnits[i];
         if (isEnumValue(enumId, transUnit)) {
             const enumValueInfo = getEnumValueInfo(transUnit);
             if (enumValueInfo) {
-                enumValues.push({xliffId: transUnit.$.id, id : enumValueInfo.id, name: enumValueInfo.name, source: transUnit.source[0], target: getTargetString(transUnit)});
+                enumValues.push({ xliffId: transUnit.$.id, id: enumValueInfo.id, name: enumValueInfo.name, source: transUnit.source[0], target: getTargetString(transUnit) });
             }
         }
     }
@@ -455,7 +531,7 @@ const isTableExtensionFieldCaption = (tableExtensionId: number, transUnit: Trans
     return false;
 };
 
-const isLabel = (type: 'Table' | 'Page' | 'Report' | 'Codeunit'|'PageExtension'|'TableExtension', id: number, transUnit: TransUnitElement): boolean => {
+const isLabel = (type: 'Table' | 'Page' | 'Report' | 'Codeunit' | 'PageExtension' | 'TableExtension', id: number, transUnit: TransUnitElement): boolean => {
     const pattern = new RegExp(`${type} ${id}.* - NamedType (\\d+)`);
     if (pattern.exec(transUnit.$.id)) {
         return true;
@@ -504,7 +580,7 @@ const isPromotedActionCategories = (id: number, transUnit: TransUnitElement): bo
     return false;
 };
 
-const isEnumValue = (id : number, transUnit : TransUnitElement) : boolean => {
+const isEnumValue = (id: number, transUnit: TransUnitElement): boolean => {
     const pattern = new RegExp(`Enum ${id} - EnumValue (\\d+) - Property 2879900210`);
     if (pattern.exec(transUnit.$.id)) {
         return true;
@@ -530,7 +606,7 @@ const getTableFieldInfo = (transUnit: TransUnitElement): { id: number, name: str
     };
 };
 
-const getLabelInfo = (type: 'Table' | 'Page' | 'Report' | 'Codeunit'|'PageExtension'|'TableExtension', transUnit: TransUnitElement): { id: number, name: string } | null => {
+const getLabelInfo = (type: 'Table' | 'Page' | 'Report' | 'Codeunit' | 'PageExtension' | 'TableExtension', transUnit: TransUnitElement): { id: number, name: string } | null => {
     const idPattern = /(?<=NamedType )\d+/g;
     const namePattern = /(?<=NamedType ).*/g;
     const generatorNote = transUnit.note.find(x => x.$.from === 'Xliff Generator');
@@ -584,7 +660,7 @@ const getPageActionInfo = (transUnit: TransUnitElement): { id: number, name: str
     };
 };
 
-const getEnumValueInfo = (transUnit : TransUnitElement): {id: number, name : string} | null => {
+const getEnumValueInfo = (transUnit: TransUnitElement): { id: number, name: string } | null => {
     const idPattern = /(?<=Enum \d+ - EnumValue )\d+(?= - Property 2879900210)/g;
     const namePattern = /(?<=- EnumValue ).*(?= - Property Caption)/g;
     const generatorNote = transUnit.note.find(x => x.$.from === 'Xliff Generator');

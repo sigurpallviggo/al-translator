@@ -59,7 +59,7 @@ export const createWebViewPanel = (context: vscode.ExtensionContext, xliffFile: 
                 break;
             case 'translate_unit':
                 if (message.payload.xliffId && message.payload.target !== undefined) {
-                    saveTranslation(message.payload.xliffId, message.payload.target, xliffFile.content, xliffFile.fsPath);
+                    saveTranslation(message.payload.xliffId, message.payload.target, xliffFile.content, xliffFile.fsPath, message.payload.isPromotedActionCategories, message.payload.promotedActionCategoryIndex);
                 }
                 break;
         }
