@@ -10,7 +10,10 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:al-translate.translateExtension"
+    "onCommand:al-translate.translateExtension",
+    "onUri",
+		"onLanguage:al",
+		"workspaceContains:**/app.json"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -18,8 +21,21 @@
       {
         "command": "al-translate.translateExtension",
         "title": "AL Translator: Translate Extension"
+      },
+      {
+        "command": "al-translate.openXlfFile",
+        "title": "Open in AL Translator"
       }
-    ]
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "when": "resourceExtname == .xlf",
+          "command": "al-translate.openXlfFile",
+          "group": "2_workspace"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",

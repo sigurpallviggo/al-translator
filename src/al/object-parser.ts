@@ -34,6 +34,12 @@ const parseAlObjectText = (alObjectText : string, xliffDocument : XLIFFDocument)
                 name = matches[1];
                 ext = matches[2];
             }
+        } else if (type === 'codeunit') {
+            const implementsPattern = /(.*) implements (.*)/gi;
+            const matches = implementsPattern.exec(name);
+            if (matches && matches.length >= 3) {
+                name = matches[1];
+            }
         }
         return {
             type,

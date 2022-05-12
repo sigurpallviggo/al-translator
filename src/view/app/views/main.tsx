@@ -55,7 +55,7 @@ export const MainView: React.FC<{ vscode: IVSCodeAPI }> = (vscode) => {
         if (!searchString) {
             setFilteredAlObjects(filteredObs);
         } else {
-            setFilteredAlObjects(filteredAlObjects.filter(x => x.name.toUpperCase().startsWith(searchValue.toUpperCase())));
+            setFilteredAlObjects(filteredAlObjects.filter(x => x.name.toUpperCase().includes(searchValue.toUpperCase())));
         }
 
       },[filteredAlObjects]);
@@ -84,7 +84,7 @@ export const MainView: React.FC<{ vscode: IVSCodeAPI }> = (vscode) => {
                 <table>
                         <ObjectListHeader showExtendsField={showExtendsField} showObjectType={showObjectType} />
                     <tbody>
-                        {filteredAlObjects.slice().map(ob => <ObjectListItem key={ob.type + ob.id.toString()} showExtendsField={showExtendsField} showObjectType={showObjectType} alObject={ob} />)}
+                        {filteredAlObjects.slice().map((ob, i) => <ObjectListItem key={i} showExtendsField={showExtendsField} showObjectType={showObjectType} alObject={ob} />)}
                     </tbody>
                 </table>
             </div>
