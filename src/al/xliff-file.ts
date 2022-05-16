@@ -398,7 +398,6 @@ const parsePageExtensionTransUnits = (pageExtensionName: string, pageExtensionId
     const actions: ITranslateTableField[] = [];
     const controls: ITranslateTableField[] = [];
     let promotedActionCategories: ITranslatePageActionPromotedCategories | null = null;
-
     for (var i = 0; i < pageExtensionTransUnits.length; i++) {
         const transUnit = pageExtensionTransUnits[i];
         if (isPageExtensionControl(pageExtensionId, transUnit)) {
@@ -424,9 +423,7 @@ const parsePageExtensionTransUnits = (pageExtensionName: string, pageExtensionId
                 });
             }
         } else if (isPageExtensionAction(pageExtensionId, transUnit)) {
-            const actionInfo = getPageActionInfo(transUnit);
-            console.log(transUnit);
-            console.log(actionInfo);
+            const actionInfo = getPageExtensionActionInfo(transUnit);
             if (actionInfo) {
                 actions.push({
                     xliffId: transUnit.$.id,
@@ -644,6 +641,24 @@ const getPageControlInfo = (transUnit: TransUnitElement): { id: number, name: st
 
 const getPageActionInfo = (transUnit: TransUnitElement): { id: number, name: string } | null => {
     const idPattern = /(?<=Page (\d+) - Action )\d+(?= - Property 2879900210)/g;
+    const namePattern = /(?<=- Action ).*(?= - Property Caption)/g;
+    const generatorNote = transUnit.note.find(x => x.$.from === 'Xliff Generator');
+    if (!generatorNote || !generatorNote._) {
+        return null;
+    };
+    const idMatches = idPattern.exec(transUnit.$.id);
+    const nameMatches = namePattern.exec(generatorNote._);
+    if (!idMatches || !nameMatches) {
+        return null;
+    }
+    return {
+        id: parseInt(idMatches[0]),
+        name: nameMatches[0]
+    };
+};
+
+const getPageExtensionActionInfo = (transUnit: TransUnitElement): { id: number, name: string } | null => {
+    const idPattern = /(?<=PageExtension (\d+) - Action )\d+(?= - Property 2879900210)/g;
     const namePattern = /(?<=- Action ).*(?= - Property Caption)/g;
     const generatorNote = transUnit.note.find(x => x.$.from === 'Xliff Generator');
     if (!generatorNote || !generatorNote._) {

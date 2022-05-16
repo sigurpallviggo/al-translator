@@ -1,8 +1,12 @@
 {
   "name": "al-translate",
-  "displayName": "al-translate",
-  "description": "",
-  "version": "0.0.1",
+  "displayName": "AL Translator",
+  "description": "Translation tool for AL language",
+  "author": {
+    "name": "Sigurpáll Viggó Snorrason",
+    "email": "sigurpallviggo@gmail.com"
+  },
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.46.0"
   },
@@ -12,8 +16,8 @@
   "activationEvents": [
     "onCommand:al-translate.translateExtension",
     "onUri",
-		"onLanguage:al",
-		"workspaceContains:**/app.json"
+    "onLanguage:al",
+    "workspaceContains:**/app.json"
   ],
   "main": "./dist/extension.js",
   "contributes": {
